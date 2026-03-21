@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRS.API", "IRS.API\IRS.API.csproj", "{9314E033-07E5-4D24-9A87-9DB9D93AF037}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRS.BLL", "IRS.BLL\IRS.BLL.csproj", "{25627392-089A-47D4-9DEC-7FE5B59FB953}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRS.DAL", "IRS.DAL\IRS.DAL.csproj", "{023DF76B-5494-4F50-8934-409F3EFCAE52}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9314E033-07E5-4D24-9A87-9DB9D93AF037}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9314E033-07E5-4D24-9A87-9DB9D93AF037}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9314E033-07E5-4D24-9A87-9DB9D93AF037}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9314E033-07E5-4D24-9A87-9DB9D93AF037}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25627392-089A-47D4-9DEC-7FE5B59FB953}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25627392-089A-47D4-9DEC-7FE5B59FB953}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25627392-089A-47D4-9DEC-7FE5B59FB953}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25627392-089A-47D4-9DEC-7FE5B59FB953}.Release|Any CPU.Build.0 = Release|Any CPU
+		{023DF76B-5494-4F50-8934-409F3EFCAE52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{023DF76B-5494-4F50-8934-409F3EFCAE52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{023DF76B-5494-4F50-8934-409F3EFCAE52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{023DF76B-5494-4F50-8934-409F3EFCAE52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {900B9D7F-0845-4CFF-9A80-946BAE07781B}
+	EndGlobalSection
+EndGlobal
