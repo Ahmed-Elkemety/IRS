@@ -15,8 +15,19 @@ namespace IRS.DAL.Configration
         {
             builder.HasKey(r => r.Id);
 
+            builder.Property(r => r.Title)
+                .IsRequired()
+                .HasMaxLength(150);
+
             builder.Property(r => r.Description)
-                .HasMaxLength(500);
+                .IsRequired();
+
+            builder.Property(r => r.Location)
+                .HasColumnType("geography");
+
+            builder.Property(r => r.Image)
+               .HasColumnType("varbinary(max)")
+               .IsRequired(false);
 
             // Citizen
             builder.HasOne(r => r.Citizen)

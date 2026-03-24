@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IRS.DAL.Enums;
+using NetTopologySuite.Geometries;
 
 namespace IRS.DAL.Models
 {
@@ -11,16 +12,17 @@ namespace IRS.DAL.Models
     {
         public int Id { get; set; }
 
-        public string Location { get; set; }
+        public string Title { get; set; }
+        public Point Location { get; set; }
         public DateTime DateTime { get; set; }
         public ReportStatus Status { get; set; }
         public string Description { get; set; }
-        public string Image { get; set; }
+        public byte[]? Image { get; set; }
         public TimeSpan? AiTime { get; set; }
 
-        public string PredictedCategory { get; set; }
-        public DateTime ReportSubmit { get; set; }
-        public double ConfidenceScore { get; set; }
+        public string? PredictedCategory { get; set; }
+        public DateTime? ReportSubmit { get; set; }
+        public double? ConfidenceScore { get; set; }
 
         // FK
         public int? AuthorityId { get; set; }

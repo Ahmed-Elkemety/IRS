@@ -9,10 +9,10 @@ namespace IRS.DAL.Models
     public class Citizen
     {
         public int Id { get; set; }
-
         public string UserId { get; set; }
         public User User { get; set; }
 
+        public string FullName { get; set; }
         public string NationalId { get; set; }
         public byte[]? Image { get; set; }
         public bool IsDeleted { get; set; }

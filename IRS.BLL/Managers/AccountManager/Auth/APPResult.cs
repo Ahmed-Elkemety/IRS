@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IRS.BLL.Managers.AccountManager.Auth
 {
-    public class AuthResult
+    public class APPResult
     {
         public bool IsSuccess { get; set; }
         public string Message { get; set; }

@@ -9,16 +9,16 @@ namespace IRS.BLL.Managers.AccountManager.Auth
 {
     public interface IAuthUser
     {
-        Task<AuthResult> RegisterAsync(RegisterDto dto);
-        Task<AuthResult> LoginAsync(LoginDto dto);
-        Task<AuthResult> RefreshTokenAsync(string refreshToken);
-        Task<AuthResult> ConfirmEmailAsync(ConfirmEmailDto dto);
-        Task<AuthResult> ResendRegistrationOtpAsync(string email);
+        Task<APPResult> RegisterAsync(RegisterDto dto);
+        Task<APPResult> LoginAsync(LoginDto dto);
+        Task<APPResult> RefreshTokenAsync(string refreshToken);
+        Task<APPResult> ConfirmEmailAsync(ConfirmEmailDto dto);
+        Task<APPResult> ResendRegistrationOtpAsync(string email);
 
-        Task<AuthResult> RequestPasswordResetAsync(string email);
-        Task<AuthResult> VerifyOtpAsync(VerifyOtpDto dto);
-        Task<AuthResult> ResetPasswordAsync(ResetPasswordDto dto);
-        Task<AuthResult> ResendOtpAsync(string email);
+        Task<APPResult> RequestPasswordResetAsync(string email);
+        Task<APPResult> VerifyOtpAsync(VerifyOtpDto dto);
+        Task<APPResult> ResetPasswordAsync(ResetPasswordDto dto);
+        Task<APPResult> ResendOtpAsync(string email);
 
     }
 }

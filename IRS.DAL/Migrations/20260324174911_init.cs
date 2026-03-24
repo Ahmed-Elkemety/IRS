@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
@@ -83,9 +84,8 @@ namespace IRS.DAL.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Code = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Purpose = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Expiry = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsUsed = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     FailedAttempts = table.Column<int>(type: "int", nullable: false),
@@ -227,6 +227,7 @@ namespace IRS.DAL.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     NationalId = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Image = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
@@ -323,15 +324,16 @@ namespace IRS.DAL.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    Location = table.Column<Point>(type: "geography", nullable: false),
                     DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Image = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
                     AiTime = table.Column<TimeSpan>(type: "time", nullable: true),
-                    PredictedCategory = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReportSubmit = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ConfidenceScore = table.Column<double>(type: "float", nullable: false),
+                    PredictedCategory = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReportSubmit = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ConfidenceScore = table.Column<double>(type: "float", nullable: true),
                     AuthorityId = table.Column<int>(type: "int", nullable: true),
                     CitizenId = table.Column<int>(type: "int", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false)
@@ -466,9 +468,9 @@ namespace IRS.DAL.Migrations
                 column: "Code");
 
             migrationBuilder.CreateIndex(
-                name: "IX_otps_Email_Purpose",
+                name: "IX_otps_Email",
                 table: "otps",
-                columns: new[] { "Email", "Purpose" });
+                column: "Email");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PendingCitizenRegistrations_Email",

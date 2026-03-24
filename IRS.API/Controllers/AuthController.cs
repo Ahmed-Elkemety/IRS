@@ -10,8 +10,6 @@ namespace IRS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
-
     public class AuthController : ControllerBase
     {
         private readonly IAuthUser _authUser;

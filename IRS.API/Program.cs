@@ -3,8 +3,10 @@ using System.Security.Claims;
 using System.Text;
 using System.Transactions;
 using IRS.BLL.Managers.AccountManager.Auth;
+using IRS.BLL.Managers.CitizenAppManager.ReportManager;
 using IRS.DAL.Database;
 using IRS.DAL.Models;
+using IRS.DAL.Repository.ReportRepo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Identity;
@@ -27,13 +29,15 @@ namespace IRS.API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<IRS_Context>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("cs")));
+            builder.Services.AddDbContext<IRS_Context>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("cs"), x => x.UseNetTopologySuite()));
             builder.Services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<IRS_Context>()
                 .AddDefaultTokenProviders();
 
             builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<IAuthUser, AuthUser>();
+            builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
             var jwtSettings = builder.Configuration.GetSection("JWT");
 
@@ -127,7 +131,11 @@ namespace IRS.API
 
             app.UseSwagger();
             app.UseSwaggerUI();
-            
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
 
             app.UseCors("AllowAll");
 
