@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IRS.BLL.Dtos.CitizenDto;
 using IRS.BLL.Managers.AccountManager.Auth;
 using IRS.DAL.Database;
+using IRS.DAL.Enums;
 using IRS.DAL.Models;
 using IRS.DAL.RepoDtos;
 using IRS.DAL.Repository.ReportRepo;
@@ -95,7 +96,6 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
             }
         }
 
-        // ======================== EDIT / UPDATE REPORT ========================
         public async Task<APPResult> EditReportAsync(int reportId, EditReportDto dto, string userId)
         {
             var result = new APPResult();
@@ -171,6 +171,20 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
             }
 
             return result;
+        }
+
+        public async Task<ReportStatus> GetStatusAsync(int reportId, string userId)
+        {
+            var citizen = await _context.Citizens.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (citizen == null)
+                throw new Exception("Citizen not found. Make sure the user exists in the database.");
+
+            var status = await _reportRepo.GetStatusAsync(reportId);
+
+            if (status == null)
+                throw new KeyNotFoundException();
+
+            return status;
         }
 
     }

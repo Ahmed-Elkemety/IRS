@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IRS.BLL.Dtos.CitizenDto;
 using IRS.BLL.Managers.AccountManager.Auth;
+using IRS.DAL.Enums;
 
 namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
 {
@@ -13,5 +14,6 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
         Task CreateReportAsync(CreateReportDto dto, string userId);
         Task<APPResult> EditReportAsync(int reportId, EditReportDto dto, string userId);
 
+        Task<ReportStatus> GetStatusAsync(int reportId, string userId);
     }
 }

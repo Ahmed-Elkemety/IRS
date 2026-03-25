@@ -62,5 +62,21 @@ namespace IRS.API.Controllers
 
             return BadRequest(result);
         }
+
+
+        [HttpGet("{id}/status")]
+        public async Task<IActionResult> GetStatus(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                var status = await _service.GetStatusAsync(id , userId);
+                return Ok(new { ReportId = id, Status = status.ToString() });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = "Report not found" });
+            }
+        }
     }
 }

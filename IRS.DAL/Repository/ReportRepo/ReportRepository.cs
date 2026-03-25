@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IRS.DAL.Database;
+using IRS.DAL.Enums;
+using IRS.DAL.Models;
 using IRS.DAL.RepoDtos;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
@@ -51,6 +53,16 @@ namespace IRS.DAL.Repository.ReportRepo
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<ReportStatus> GetStatusAsync(int reportId)
+        {
+            var status = await _context.Reports
+            .Where(r => r.Id == reportId)
+            .Select(r => (ReportStatus?)r.Status)
+            .FirstOrDefaultAsync();
+
+            return status ?? throw new Exception("Report not found. Make sure the report ID is correct.");
         }
     }
 }
