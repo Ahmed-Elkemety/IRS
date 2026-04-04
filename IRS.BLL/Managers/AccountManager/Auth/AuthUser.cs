@@ -42,7 +42,7 @@ namespace IRS.BLL.Managers.AccountManager.Auth
         #endregion
 
         #region  check By Email , Create User Object , Assign Password To This Email , Add Role To User By Identity
-        public async Task<APPResult> RegisterAsync(RegisterDto dto)
+        public async Task<APPResult> RegisterCitizenAsync(RegisterCitizenDto dto)
         {
             // التأكد من أن الإيميل مش موجود بالفعل
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
@@ -133,7 +133,7 @@ namespace IRS.BLL.Managers.AccountManager.Auth
         #endregion
 
         #region Confirm Email and Create User
-        public async Task<APPResult> ConfirmEmailAsync(ConfirmEmailDto dto)
+        public async Task<APPResult> ConfirmEmailCitizenAsync(ConfirmEmailDto dto)
         {
             // استرجاع pending user من جدول PendingCitizenRegistration
             var pending = await _context.pendingCitizenRegistrations
@@ -214,7 +214,7 @@ namespace IRS.BLL.Managers.AccountManager.Auth
         #endregion
 
         #region  Search By Email , Check Password To This Email , Generate Token
-        public async Task<APPResult> LoginAsync(LoginDto dto)
+        public async Task<APPResult> LoginCitizenAsync(LoginDto dto)
         {
             //  نبحث في جدول Users
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -223,6 +223,232 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             {
                 //  لو مش موجود، نشوف جدول PendingUserRegistrations
                 var pendingUser = await _context.pendingCitizenRegistrations
+                    .FirstOrDefaultAsync(p => p.Email == dto.Email);
+
+                if (pendingUser != null)
+                {
+                    // Email مسجل لكن لم يتم التحقق من OTP
+                    return new APPResult
+                    {
+                        IsSuccess = false,
+                        Errors = new List<string> { "Email registered but OTP not verified. Please verify your email." }
+                    };
+                }
+
+                // Email مش موجود نهائيًا
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = new List<string> { "Invalid login attempt" }
+                };
+            }
+
+            //  لو المستخدم موجود في Users، نتحقق من كلمة السر
+            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+            if (!result.Succeeded)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = new List<string> { "Invalid login attempt" }
+                };
+            }
+
+
+            // 4️⃣ Generate Tokens
+            var token = await GenerateTokensAsync(user);
+
+            return new APPResult
+            {
+                IsSuccess = true,
+                UserId = user.Id,
+                Token = token.Token,
+                RefreshToken = token.RefreshToken
+            };
+        }
+        #endregion
+
+        public async Task<APPResult> RegisterAuthorityAsync(RegisterAuthorityDto dto)
+        {
+            // التأكد من أن الإيميل مش موجود بالفعل
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = new() { "Email already in use" }
+                };
+
+            var passwordValidator = new PasswordValidator<User>();
+            var fakeUser = new User { UserName = dto.Email, Email = dto.Email };
+            var passwordResult = await passwordValidator.ValidateAsync(_userManager, fakeUser, dto.Password);
+
+            // التأكد لو في pending user موجود
+            var pendingUser = await _context.pendingAuthorityRegistrations
+                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+
+            if (pendingUser != null)
+            {
+                // إذا صلاحية OTP انتهت نقدر نعيد إرسال OTP
+                var lastOtp = await _context.otps
+                    .Where(o => o.Email == dto.Email && !o.IsUsed)
+                    .OrderByDescending(o => o.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (lastOtp != null && lastOtp.Expiry > DateTime.UtcNow)
+                {
+                    return new APPResult
+                    {
+                        IsSuccess = false,
+                        Errors = new() { "OTP already sent. Please check your email." }
+                    };
+                }
+                else
+                {
+                    _context.pendingAuthorityRegistrations.Remove(pendingUser);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // توليد OTP
+            var otpCode = Helper.GenerateOtp();
+            var otpSecret = _configuration["Security:OtpSecret"];
+            var otpHash = Helper.HashOtp(otpCode, otpSecret);
+
+            int otpExpiryMinutes = 5; // default
+            var otpExpiryConfig = _configuration["Security:OtpExpiryMinutes"];
+            if (!string.IsNullOrEmpty(otpExpiryConfig))
+                otpExpiryMinutes = int.Parse(otpExpiryConfig);
+
+            // إنشاء PendingUserRegistration بدون OTP
+            var pending = new pendingAuthorityRegistrations
+            {
+                Name = dto.FullName,
+                Email = dto.Email,
+                Password = dto.Password,
+                Phone = dto.Phone,
+                Address = dto.Address,
+                DeptId = dto.DeptId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.pendingAuthorityRegistrations.Add(pending);
+            await _context.SaveChangesAsync();
+
+            // إنشاء سجل OTP منفصل
+            var otpEntity = new Otp
+            {
+                Email = dto.Email,
+                Code = otpHash,
+                Expiry = DateTime.UtcNow.AddMinutes(otpExpiryMinutes),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.otps.Add(otpEntity);
+            await _context.SaveChangesAsync();
+
+            // إرسال OTP للمستخدم
+            await _emailSender.SendOtpEmailAsync(dto.Email, otpCode);
+
+            return new APPResult
+            {
+                IsSuccess = true,
+                Message = "OTP sent to your email"
+            };
+        }
+
+        #region Confirm Email and Create User
+        public async Task<APPResult> ConfirmEmailAuthorityAsync(ConfirmEmailDto dto)
+        {
+            // استرجاع pending user من جدول PendingCitizenRegistration
+            var pending = await _context.pendingAuthorityRegistrations
+                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+
+            if (pending == null)
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = new() { "Pending registration not found" }
+                };
+
+            // استرجاع الـOTP من جدول الـOTP
+            var otp = await _context.otps
+                .Where(o => o.Email == dto.Email && !o.IsUsed && o.Expiry > DateTime.UtcNow)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (otp == null)
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = new() { "Invalid or expired OTP" }
+                };
+
+            // تحقق من الكود
+            var otpHash = Helper.HashOtp(dto.Otp, _configuration["Security:OtpSecret"]);
+            if (otpHash != otp.Code)
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = new() { "Invalid OTP" }
+                };
+
+            // إنشاء الـUser النهائي
+            var user = new User
+            {
+                UserName = pending.Email,
+                Email = pending.Email,
+                PasswordHash = pending.Password,
+            };
+
+            var result = await _userManager.CreateAsync(user, pending.Password);
+            if (!result.Succeeded)
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
+
+            await _userManager.AddToRoleAsync(user, "AUTHORITY");
+
+            // إنشاء الـCitizen وربطه بالـUser
+            var Authority = new Authority
+            {
+                UserId = user.Id,
+                User = user,
+                Name = pending.Name,
+                Phone = pending.Phone,
+                Address = pending.Address,
+                DeptId = pending.DeptId,
+            };
+
+            _context.Authorities.Add(Authority);
+
+            otp.IsUsed = true;
+
+            _context.pendingAuthorityRegistrations.Remove(pending);
+
+            await _context.SaveChangesAsync();
+
+            return new APPResult
+            {
+                IsSuccess = true,
+                Message = "Email confirmed and account created successfully"
+            };
+        }
+        #endregion
+
+        #region  Search By Email , Check Password To This Email , Generate Token
+        public async Task<APPResult> LoginAuthorityAsync(LoginDto dto)
+        {
+            //  نبحث في جدول Users
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (user == null)
+            {
+                //  لو مش موجود، نشوف جدول PendingUserRegistrations
+                var pendingUser = await _context.pendingAuthorityRegistrations
                     .FirstOrDefaultAsync(p => p.Email == dto.Email);
 
                 if (pendingUser != null)

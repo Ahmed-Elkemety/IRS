@@ -20,11 +20,11 @@ namespace IRS.API.Controllers
         }
 
         // ✅ تسجيل مستخدم جديد
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        [HttpPost("register-citizen")]
+        public async Task<IActionResult> RegisterCitizen([FromBody] RegisterCitizenDto dto)
         {
 
-            var result = await _authUser.RegisterAsync(dto);
+            var result = await _authUser.RegisterCitizenAsync(dto);
             if (!result.IsSuccess)
                 return BadRequest(result);
 
@@ -32,10 +32,10 @@ namespace IRS.API.Controllers
         }
 
         // ✅ تأكيد البريد الإلكتروني
-        [HttpPost("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail(ConfirmEmailDto dto)
+        [HttpPost("confirm-email-citizen")]
+        public async Task<IActionResult> ConfirmEmailCitizen(ConfirmEmailDto dto)
         {
-            var result = await _authUser.ConfirmEmailAsync(dto);
+            var result = await _authUser.ConfirmEmailCitizenAsync(dto);
             if (!result.IsSuccess)
                 return BadRequest(result.Errors);
 
@@ -43,10 +43,43 @@ namespace IRS.API.Controllers
         }
 
         // ✅ تسجيل الدخول
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        [HttpPost("login-citizen")]
+        public async Task<IActionResult> LoginCitizen([FromBody] LoginDto dto)
         {
-            var result = await _authUser.LoginAsync(dto);
+            var result = await _authUser.LoginCitizenAsync(dto);
+            if (!result.IsSuccess)
+                return Unauthorized(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("register-authority")]
+        public async Task<IActionResult> RegisterAuthority([FromBody] RegisterAuthorityDto dto)
+        {
+
+            var result = await _authUser.RegisterAuthorityAsync(dto);
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        // ✅ تأكيد البريد الإلكتروني
+        [HttpPost("confirm-email-authority")]
+        public async Task<IActionResult> ConfirmEmailAuthority(ConfirmEmailDto dto)
+        {
+            var result = await _authUser.ConfirmEmailAuthorityAsync(dto);
+            if (!result.IsSuccess)
+                return BadRequest(result.Errors);
+
+            return Ok(result.Message);
+        }
+
+        // ✅ تسجيل الدخول
+        [HttpPost("login-authority")]
+        public async Task<IActionResult> LoginAuthority([FromBody] LoginDto dto)
+        {
+            var result = await _authUser.LoginAuthorityAsync(dto);
             if (!result.IsSuccess)
                 return Unauthorized(result);
 

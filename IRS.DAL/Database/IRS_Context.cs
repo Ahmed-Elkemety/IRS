@@ -41,6 +41,7 @@ namespace IRS.DAL.Database
         public DbSet<Otp> otps { get; set; }
         public DbSet<RefreshToken> refreshTokens { get; set; }
         public DbSet<PendingCitizenRegistration> pendingCitizenRegistrations { get; set; }
+        public DbSet<pendingAuthorityRegistrations> pendingAuthorityRegistrations { get; set; }
 
     }
 }
