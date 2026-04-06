@@ -19,7 +19,6 @@ namespace IRS.BLL.Help
             var hash = sha.ComputeHash(bytes);
             return Convert.ToBase64String(hash);
         }
-        // توليد OTP 6 أرقام افتراضي
         public static string GenerateOtp(int digits = 6)
         {
             var random = new Random();
@@ -28,13 +27,11 @@ namespace IRS.BLL.Help
             return random.Next(min, max).ToString();
         }
 
-        // عمل Hash للـ OTP مع Secret
         public static string HashOtp(string code, string secret)
         {
             return (code + secret).Hash();
         }
 
-        // توليد Session Token مؤقت
         public static string GenerateSessionToken()
         {
             return Guid.NewGuid().ToString();

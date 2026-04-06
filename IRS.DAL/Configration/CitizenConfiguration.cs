@@ -19,7 +19,6 @@ namespace IRS.DAL.Configration
                 .IsRequired()
                 .HasMaxLength(20);
 
-            // 1:1 مع User
             builder.HasOne(c => c.User)
                 .WithOne(u => u.Citizen)
                 .HasForeignKey<Citizen>(c => c.UserId);

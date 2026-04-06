@@ -103,9 +103,9 @@ namespace IRS.API
                     sqlOptions =>
                     {
                         sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,         // √ﬁ’Ï ⁄œœ „Õ«Ê·«  ≈⁄«œ… «·« ’«·
-                            maxRetryDelay: TimeSpan.FromSeconds(10), // Êﬁ  «·«‰ Ÿ«— »Ì‰ «·„Õ«Ê·« 
-                            errorNumbersToAdd: null   // ·Ê ⁄«Ì“  Õœœ √—ﬁ«„ errors „⁄Ì‰…
+                            maxRetryCount: 5,        
+                            maxRetryDelay: TimeSpan.FromSeconds(10), 
+                            errorNumbersToAdd: null   
                         );
                     }
                 )

@@ -13,7 +13,6 @@ namespace IRS.DAL.Models
         public string Message { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        // FK
         public int CitizenId { get; set; }
         public Citizen Citizen { get; set; }
     }

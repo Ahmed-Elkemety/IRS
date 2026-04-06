@@ -102,7 +102,6 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
 
             try
             {
-                // Validation قبل التحديث
                 var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
                 if (!categoryExists)
                 {
@@ -118,7 +117,6 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                     return result;
                 }
 
-                // معالجة الصورة لو موجودة
                 byte[]? imageBytes = null;
                 if (dto.Image != null)
                 {
@@ -142,7 +140,6 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                     imageBytes = ms.ToArray();
                 }
 
-                // تحديث التقرير عن طريق Repository
                 var dto1 = new EditReportRepoDto
                 {
                     CategoryId = dto.CategoryId,

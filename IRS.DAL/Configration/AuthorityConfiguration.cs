@@ -19,14 +19,12 @@ namespace IRS.DAL.Configration
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // 1:1 مع User
             builder.HasOne(a => a.User)
                 .WithOne(u => u.Authority)
                 .HasForeignKey<Authority>(a => a.UserId);
 
             builder.HasIndex(a => a.UserId).IsUnique();
 
-            // Department
             builder.HasOne(a => a.Department)
                 .WithMany(d => d.Authorities)
                 .HasForeignKey(a => a.DeptId);

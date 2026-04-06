@@ -17,7 +17,6 @@ namespace IRS.DAL.Models
         public byte[]? Image { get; set; }
         public bool IsDeleted { get; set; }
 
-        // Relations
         public ICollection<Report>? Reports { get; set; }
         public ICollection<Notification>? Notifications { get; set; }
         public ICollection<AdminChat>? AdminChats { get; set; }

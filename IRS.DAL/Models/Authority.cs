@@ -20,7 +20,6 @@ namespace IRS.DAL.Models
         public int DeptId { get; set; }
         public Department Department { get; set; }
 
-        // Relations
         public ICollection<Report> Reports { get; set; }
     }
 }

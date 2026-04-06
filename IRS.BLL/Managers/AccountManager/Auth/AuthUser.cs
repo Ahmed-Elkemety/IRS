@@ -20,7 +20,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
 {
     public class AuthUser : IAuthUser
     {
-        #region  Dependency Injection , UserManagement & SignInManager in Identity , IConfiguration To Access To App Settings 
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
@@ -39,12 +38,9 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _emailSender = emailSender;
             _context = context;
         }
-        #endregion
 
-        #region  check By Email , Create User Object , Assign Password To This Email , Add Role To User By Identity
         public async Task<APPResult> RegisterCitizenAsync(RegisterCitizenDto dto)
         {
-            // التأكد من أن الإيميل مش موجود بالفعل
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
             if (existingUser != null)
                 return new APPResult
@@ -57,13 +53,11 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             var fakeUser = new User { UserName = dto.Email, Email = dto.Email };
             var passwordResult = await passwordValidator.ValidateAsync(_userManager, fakeUser, dto.Password);
 
-            // التأكد لو في pending user موجود
             var pendingUser = await _context.pendingCitizenRegistrations
                 .FirstOrDefaultAsync(x => x.Email == dto.Email);
 
             if (pendingUser != null)
             {
-                // إذا صلاحية OTP انتهت نقدر نعيد إرسال OTP
                 var lastOtp = await _context.otps
                     .Where(o => o.Email == dto.Email && !o.IsUsed)
                     .OrderByDescending(o => o.CreatedAt)
@@ -84,17 +78,15 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 }
             }
 
-            // توليد OTP
             var otpCode = Helper.GenerateOtp();
             var otpSecret = _configuration["Security:OtpSecret"];
             var otpHash = Helper.HashOtp(otpCode, otpSecret);
 
-            int otpExpiryMinutes = 5; // default
+            int otpExpiryMinutes = 5;
             var otpExpiryConfig = _configuration["Security:OtpExpiryMinutes"];
             if (!string.IsNullOrEmpty(otpExpiryConfig))
                 otpExpiryMinutes = int.Parse(otpExpiryConfig);
 
-            // إنشاء PendingUserRegistration بدون OTP
             var pending = new PendingCitizenRegistration
             {
                 FullName = dto.FullName,
@@ -108,7 +100,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.pendingCitizenRegistrations.Add(pending);
             await _context.SaveChangesAsync();
 
-            // إنشاء سجل OTP منفصل
             var otpEntity = new Otp
             {
                 Email = dto.Email,
@@ -121,7 +112,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.otps.Add(otpEntity);
             await _context.SaveChangesAsync();
 
-            // إرسال OTP للمستخدم
             await _emailSender.SendOtpEmailAsync(dto.Email, otpCode);
 
             return new APPResult
@@ -130,12 +120,9 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 Message = "OTP sent to your email"
             };
         }
-        #endregion
 
-        #region Confirm Email and Create User
         public async Task<APPResult> ConfirmEmailCitizenAsync(ConfirmEmailDto dto)
         {
-            // استرجاع pending user من جدول PendingCitizenRegistration
             var pending = await _context.pendingCitizenRegistrations
                 .FirstOrDefaultAsync(x => x.Email == dto.Email);
 
@@ -146,7 +133,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Errors = new() { "Pending registration not found" }
                 };
 
-            // استرجاع الـOTP من جدول الـOTP
             var otp = await _context.otps
                 .Where(o => o.Email == dto.Email &&  !o.IsUsed && o.Expiry > DateTime.UtcNow)
                 .OrderByDescending(o => o.CreatedAt)
@@ -159,7 +145,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Errors = new() { "Invalid or expired OTP" }
                 };
 
-            // تحقق من الكود
             var otpHash = Helper.HashOtp(dto.Otp, _configuration["Security:OtpSecret"]);
             if (otpHash != otp.Code)
                 return new APPResult
@@ -168,7 +153,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Errors = new() { "Invalid OTP" }
                 };
 
-            // إنشاء الـUser النهائي
             var user = new User
             {
                 UserName = pending.Email,
@@ -186,7 +170,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
 
             await _userManager.AddToRoleAsync(user, "CITIZEN");
 
-            // إنشاء الـCitizen وربطه بالـUser
             var citizen = new Citizen
             {
                 UserId = user.Id,
@@ -211,23 +194,18 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 Message = "Email confirmed and account created successfully"
             };
         }
-        #endregion
 
-        #region  Search By Email , Check Password To This Email , Generate Token
         public async Task<APPResult> LoginCitizenAsync(LoginDto dto)
         {
-            //  نبحث في جدول Users
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
             if (user == null)
             {
-                //  لو مش موجود، نشوف جدول PendingUserRegistrations
                 var pendingUser = await _context.pendingCitizenRegistrations
                     .FirstOrDefaultAsync(p => p.Email == dto.Email);
 
                 if (pendingUser != null)
                 {
-                    // Email مسجل لكن لم يتم التحقق من OTP
                     return new APPResult
                     {
                         IsSuccess = false,
@@ -235,7 +213,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     };
                 }
 
-                // Email مش موجود نهائيًا
                 return new APPResult
                 {
                     IsSuccess = false,
@@ -243,7 +220,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 };
             }
 
-            //  لو المستخدم موجود في Users، نتحقق من كلمة السر
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded)
             {
@@ -255,7 +231,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             }
 
 
-            // 4️⃣ Generate Tokens
             var token = await GenerateTokensAsync(user);
 
             return new APPResult
@@ -266,11 +241,9 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 RefreshToken = token.RefreshToken
             };
         }
-        #endregion
 
         public async Task<APPResult> RegisterAuthorityAsync(RegisterAuthorityDto dto)
         {
-            // التأكد من أن الإيميل مش موجود بالفعل
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
             if (existingUser != null)
                 return new APPResult
@@ -283,13 +256,11 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             var fakeUser = new User { UserName = dto.Email, Email = dto.Email };
             var passwordResult = await passwordValidator.ValidateAsync(_userManager, fakeUser, dto.Password);
 
-            // التأكد لو في pending user موجود
             var pendingUser = await _context.pendingAuthorityRegistrations
                 .FirstOrDefaultAsync(x => x.Email == dto.Email);
 
             if (pendingUser != null)
             {
-                // إذا صلاحية OTP انتهت نقدر نعيد إرسال OTP
                 var lastOtp = await _context.otps
                     .Where(o => o.Email == dto.Email && !o.IsUsed)
                     .OrderByDescending(o => o.CreatedAt)
@@ -310,17 +281,15 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 }
             }
 
-            // توليد OTP
             var otpCode = Helper.GenerateOtp();
             var otpSecret = _configuration["Security:OtpSecret"];
             var otpHash = Helper.HashOtp(otpCode, otpSecret);
 
-            int otpExpiryMinutes = 5; // default
+            int otpExpiryMinutes = 5; 
             var otpExpiryConfig = _configuration["Security:OtpExpiryMinutes"];
             if (!string.IsNullOrEmpty(otpExpiryConfig))
                 otpExpiryMinutes = int.Parse(otpExpiryConfig);
 
-            // إنشاء PendingUserRegistration بدون OTP
             var pending = new pendingAuthorityRegistrations
             {
                 Name = dto.FullName,
@@ -335,7 +304,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.pendingAuthorityRegistrations.Add(pending);
             await _context.SaveChangesAsync();
 
-            // إنشاء سجل OTP منفصل
             var otpEntity = new Otp
             {
                 Email = dto.Email,
@@ -348,7 +316,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.otps.Add(otpEntity);
             await _context.SaveChangesAsync();
 
-            // إرسال OTP للمستخدم
             await _emailSender.SendOtpEmailAsync(dto.Email, otpCode);
 
             return new APPResult
@@ -358,10 +325,8 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             };
         }
 
-        #region Confirm Email and Create User
         public async Task<APPResult> ConfirmEmailAuthorityAsync(ConfirmEmailDto dto)
         {
-            // استرجاع pending user من جدول PendingCitizenRegistration
             var pending = await _context.pendingAuthorityRegistrations
                 .FirstOrDefaultAsync(x => x.Email == dto.Email);
 
@@ -372,7 +337,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Errors = new() { "Pending registration not found" }
                 };
 
-            // استرجاع الـOTP من جدول الـOTP
             var otp = await _context.otps
                 .Where(o => o.Email == dto.Email && !o.IsUsed && o.Expiry > DateTime.UtcNow)
                 .OrderByDescending(o => o.CreatedAt)
@@ -385,7 +349,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Errors = new() { "Invalid or expired OTP" }
                 };
 
-            // تحقق من الكود
             var otpHash = Helper.HashOtp(dto.Otp, _configuration["Security:OtpSecret"]);
             if (otpHash != otp.Code)
                 return new APPResult
@@ -394,7 +357,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Errors = new() { "Invalid OTP" }
                 };
 
-            // إنشاء الـUser النهائي
             var user = new User
             {
                 UserName = pending.Email,
@@ -412,7 +374,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
 
             await _userManager.AddToRoleAsync(user, "AUTHORITY");
 
-            // إنشاء الـCitizen وربطه بالـUser
             var Authority = new Authority
             {
                 UserId = user.Id,
@@ -437,23 +398,18 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 Message = "Email confirmed and account created successfully"
             };
         }
-        #endregion
 
-        #region  Search By Email , Check Password To This Email , Generate Token
         public async Task<APPResult> LoginAuthorityAsync(LoginDto dto)
         {
-            //  نبحث في جدول Users
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
             if (user == null)
             {
-                //  لو مش موجود، نشوف جدول PendingUserRegistrations
                 var pendingUser = await _context.pendingAuthorityRegistrations
                     .FirstOrDefaultAsync(p => p.Email == dto.Email);
 
                 if (pendingUser != null)
                 {
-                    // Email مسجل لكن لم يتم التحقق من OTP
                     return new APPResult
                     {
                         IsSuccess = false,
@@ -461,7 +417,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     };
                 }
 
-                // Email مش موجود نهائيًا
                 return new APPResult
                 {
                     IsSuccess = false,
@@ -469,7 +424,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 };
             }
 
-            //  لو المستخدم موجود في Users، نتحقق من كلمة السر
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded)
             {
@@ -481,7 +435,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             }
 
 
-            // 4️⃣ Generate Tokens
             var token = await GenerateTokensAsync(user);
 
             return new APPResult
@@ -492,9 +445,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 RefreshToken = token.RefreshToken
             };
         }
-        #endregion
-
-        #region Search User. Token That == Argument Token , Check For This UsrToken ,Generate Token By Refresh Token & Add ExpiryDate
         public async Task<APPResult> RefreshTokenAsync(string refreshToken)
         {
             var tokenhash = refreshToken.Hash();
@@ -521,9 +471,7 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 RefreshToken = tokens.RefreshToken
             };
         }
-        #endregion
 
-        #region Generate Tokens
         private async Task<(string Token, string RefreshToken)> GenerateTokensAsync(User user)
         {
             var claims = new List<Claim>
@@ -567,11 +515,9 @@ namespace IRS.BLL.Managers.AccountManager.Auth
 
             return (new JwtSecurityTokenHandler().WriteToken(token), refreshToken);
         }
-        #endregion
 
         public async Task<APPResult> ResendRegistrationOtpAsync(string email)
         {
-            // نجيب ال pending user
             var pendingUser = await _context.pendingCitizenRegistrations
                 .FirstOrDefaultAsync(u => u.Email == email);
 
@@ -582,13 +528,11 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Message = "Pending user not found"
                 };
 
-            // توليد OTP جديد
             var code = Helper.GenerateOtp();
             var hash = Helper.HashOtp(code, _configuration["Security:OtpSecret"]);
 
             int otpExpiryMinutes = int.Parse(_configuration["Security:OtpExpiryMinutes"] ?? "5");
 
-            // إنشاء سجل OTP جديد في جدول الـOtp
             var otpEntity = new Otp
             {
                 Email = pendingUser.Email,
@@ -601,7 +545,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.otps.Add(otpEntity);
             await _context.SaveChangesAsync();
 
-            // ارسال الايميل
             await _emailSender.SendEmailAsync(
                 pendingUser.Email,
                 "Your Registration OTP",
@@ -615,7 +558,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
         }
         public async Task<APPResult> RequestPasswordResetAsync(string email)
         {
-            // التأكد من وجود المستخدم
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
                 return new APPResult
@@ -624,7 +566,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Message = "User not found"
                 };
 
-            // Cleanup أي OTPs قديمة لهذا الغرض
             var oldOtps = await _context.otps
                 .Where(o => o.Email == user.Email && !o.IsUsed)
                 .ToListAsync();
@@ -632,13 +573,11 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.otps.RemoveRange(oldOtps);
             await _context.SaveChangesAsync();
 
-            // توليد OTP + hash
             var code = Helper.GenerateOtp();
             var hashed = Helper.HashOtp(code, _configuration["Security:OtpSecret"]);
 
             int otpExpiryMinutes = int.Parse(_configuration["Security:OtpExpiryMinutes"] ?? "10");
 
-            // حفظ OTP جديد
             var otpEntity = new Otp
             {
                 Email = user.Email,
@@ -651,7 +590,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.otps.Add(otpEntity);
             await _context.SaveChangesAsync();
 
-            // إرسال الايميل
             var body = $"<h2>Your OTP code is: {code}</h2><p>It expires in {otpExpiryMinutes} minutes.</p>";
             await _emailSender.SendEmailAsync(user.Email, "Password Reset Code", body);
 
@@ -673,11 +611,9 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Message = "User not found"
                 };
 
-            // حذف OTPs القديمة الخاصة بهذا الهدف
             await CleanupOtpsAsync(user.Id);
             await _context.SaveChangesAsync();
 
-            // الحصول على أحدث OTP صالح
             var record = await _context.otps
                 .Where(x =>
                     x.Email == user.Email &&
@@ -693,7 +629,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Message = "Invalid or expired OTP"
                 };
 
-            // تحقق من عدد المحاولات
             int maxAttempts = int.Parse(_configuration["Security:MaxOtpAttempts"] ?? "3");
 
             if (record.FailedAttempts >= maxAttempts)
@@ -703,7 +638,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                     Message = "Too many attempts"
                 };
 
-            // تحقق من الكود
             var hashedInput = Helper.HashOtp(dto.Code, _configuration["Security:OtpSecret"]);
 
             if (record.Code != hashedInput)
@@ -718,11 +652,9 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 };
             }
 
-            // نجاح التحقق
             record.IsUsed = true;
             await _context.SaveChangesAsync();
 
-            // إنشاء Session Token (أو أي Token مناسب)
             var sessionToken = Helper.GenerateSessionToken();
 
             return new APPResult
@@ -775,13 +707,11 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             if (user == null)
                 return new APPResult { IsSuccess = false, Message = "User not found" };
 
-            // آخر OTP
             var lastOtp = await _context.otps
                 .Where(x => x.Email == user.Email)
                 .OrderByDescending(x => x.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            // cooldown
             int cooldown = int.Parse(_configuration["Security:OtpCooldownSeconds"] ?? "60");
 
             if (lastOtp != null && lastOtp.CreatedAt > DateTime.UtcNow.AddSeconds(-cooldown))
@@ -793,7 +723,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 };
             }
 
-            // limit إعادة الإرسال لكل ساعة
             int resendLimit = int.Parse(_configuration["Security:MaxResendPerHour"] ?? "5");
 
             var resendCount = await _context.otps
@@ -810,7 +739,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 };
             }
 
-            // حذف OTPs القديمة الخاصة بهذا الـPurpose
             var oldOtps = await _context.otps
                 .Where(x => x.Email == user.Email)
                 .ToListAsync();
@@ -821,7 +749,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 await _context.SaveChangesAsync();
             }
 
-            // توليد OTP جديد
             var code = Helper.GenerateOtp();
             var hash = Helper.HashOtp(code, _configuration["Security:OtpSecret"]);
 
@@ -839,7 +766,6 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             _context.otps.Add(otp);
             await _context.SaveChangesAsync();
 
-            // إرسال الايميل
             await _emailSender.SendEmailAsync(
                 user.Email,
                 "Your OTP Code",

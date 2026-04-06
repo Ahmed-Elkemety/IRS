@@ -10,11 +10,9 @@ namespace IRS.DAL.Models
     {
         public int Id { get; set; }
 
-        // بيانات الـ User (مؤقتة)
         public string Email { get; set; }
         public string Password { get; set; }
 
-        // بيانات Citizen
         public string FullName { get; set; }
         public string NationalId { get; set; }
         public byte[]? Image { get; set; }

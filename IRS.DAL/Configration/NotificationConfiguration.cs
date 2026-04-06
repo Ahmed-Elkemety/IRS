@@ -19,12 +19,10 @@ namespace IRS.DAL.Configration
                 .IsRequired()
                 .HasMaxLength(200);
 
-            // Citizen
             builder.HasOne(n => n.Citizen)
                 .WithMany(c => c.Notifications)
                 .HasForeignKey(n => n.CitizenId);
 
-            // Report
             builder.HasOne(n => n.Report)
                 .WithMany(r => r.Notifications)
                 .HasForeignKey(n => n.ReportId);

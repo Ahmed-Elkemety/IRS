@@ -16,7 +16,6 @@ namespace IRS.DAL.Models
         public  NotificationType NotificationType { get; set; }
         public bool IsRead { get; set; }
 
-        // FK
         public int CitizenId { get; set; }
         public Citizen Citizen { get; set; }
 
