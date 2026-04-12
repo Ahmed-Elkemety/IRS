@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IRS.BLL.Dtos.AuthorityDto.Dashboard;
 using IRS.BLL.Managers.AccountManager.Auth;
 
-namespace IRS.BLL.Managers.AuthorityManager
+namespace IRS.BLL.Managers.AuthorityManager.Dashboard
 {
     public interface IDashboardService
     {

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Transactions;
 using IRS.BLL.Managers.AccountManager.Auth;
+using IRS.BLL.Managers.AuthorityManager.Report;
 using IRS.BLL.Managers.CitizenAppManager.ReportManager;
 using IRS.DAL.Database;
 using IRS.DAL.Models;
@@ -38,6 +39,7 @@ namespace IRS.API
             builder.Services.AddScoped<IAuthUser, AuthUser>();
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IReportRepository, ReportRepository>();
+            builder.Services.AddScoped<IReportManager, ReportManager>();
 
             var jwtSettings = builder.Configuration.GetSection("JWT");
 

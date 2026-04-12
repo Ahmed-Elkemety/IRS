@@ -32,16 +32,14 @@ namespace IRS.DAL.Repository.ReportRepo
             if (report == null)
                 return false;
 
-            // تحديث البيانات الأساسية
             report.Title = dto.Title;
             report.Description = dto.Description;
             report.CategoryId = dto.CategoryId;
             report.Periority = dto.Periority;
-            // تحديث الموقع
+
             var geometryFactory = NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
             report.Location = geometryFactory.CreatePoint(new Coordinate(dto.Longitude, dto.Latitude));
 
-            // تحديث الصورة لو موجودة
             if (dto.Image != null)
             {
                 using var ms = new MemoryStream();
@@ -63,6 +61,43 @@ namespace IRS.DAL.Repository.ReportRepo
             .FirstOrDefaultAsync();
 
             return status ?? throw new Exception("Report not found. Make sure the report ID is correct.");
+        }
+
+        public async Task<List<Report>> GetReportsAsync(ReportFilterRepoDto filter)
+        {
+            var query = _context.Reports
+                .Include(r => r.Category)
+                .Include(r => r.Citizen)
+                .AsQueryable();
+
+            // Filters
+            if (filter.From.HasValue)
+                query = query.Where(r => r.DateTime >= filter.From);
+
+            if (filter.To.HasValue)
+                query = query.Where(r => r.DateTime <= filter.To);
+
+            if (filter.CategoryId.HasValue)
+                query = query.Where(r => r.CategoryId == filter.CategoryId);
+
+            if (filter.Status.HasValue)
+                query = query.Where(r => r.Status == filter.Status);
+
+            if (filter.Priority.HasValue)
+                query = query.Where(r => r.Periority == filter.Priority);
+
+            if (filter.MinConfidence.HasValue)
+                query = query.Where(r => r.ConfidenceScore >= filter.MinConfidence);
+
+            return await query.OrderByDescending(r => r.DateTime).ToListAsync();
+        }
+
+        public async Task<Report?> GetByIdAsync(int id)
+        {
+            return await _context.Reports
+                .Include(r => r.Category)
+                .Include(r => r.Citizen)
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
     }
 }

@@ -13,5 +13,7 @@ namespace IRS.DAL.Repository.ReportRepo
     {
         Task<bool> UpdateReportAsync(int reportId, string userId, EditReportRepoDto dto);
         Task<ReportStatus> GetStatusAsync(int reportId);
+        Task<List<Report>> GetReportsAsync(ReportFilterRepoDto filter);
+        Task<Report?> GetByIdAsync(int id);
     }
 }

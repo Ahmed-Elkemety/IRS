@@ -10,7 +10,7 @@ using IRS.DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace IRS.BLL.Managers.AuthorityManager
+namespace IRS.BLL.Managers.AuthorityManager.Dashboard
 {
     public class DashboardService:IDashboardService
     {
@@ -75,7 +75,7 @@ namespace IRS.BLL.Managers.AuthorityManager
             if (previous == 0)
                 return current == 0 ? 0 : 100;
 
-            return ((double)(current - previous) / previous) * 100;
+            return (double)(current - previous) / previous * 100;
         }
 
         public async Task<APPResult> GetIncidentVolumeAsync(int days)
