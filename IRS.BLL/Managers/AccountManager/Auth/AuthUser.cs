@@ -236,9 +236,7 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             return new APPResult
             {
                 IsSuccess = true,
-                UserId = user.Id,
-                Token = token.Token,
-                RefreshToken = token.RefreshToken
+                Token = token,
             };
         }
 
@@ -440,54 +438,45 @@ namespace IRS.BLL.Managers.AccountManager.Auth
             return new APPResult
             {
                 IsSuccess = true,
-                UserId = user.Id,
-                Token = token.Token,
-                RefreshToken = token.RefreshToken
+                Token = token,
             };
         }
-        public async Task<APPResult> RefreshTokenAsync(string refreshToken)
+        public async Task<APPResult> RefreshTokenAsync(string userId)
         {
-            var tokenhash = refreshToken.Hash();
-            var storedToken = await _context.refreshTokens
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r =>
-                    r.Token == tokenhash &&
-                    !r.IsRevoked);
 
-            if (storedToken == null || storedToken.ExpiresAt < DateTime.UtcNow)
-                return new APPResult { IsSuccess = false, Message = "Invalid or expired refresh token" };
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Message = "User Not Found"
+                };
+            }
 
-            storedToken.IsRevoked = true;
-
-            var tokens = await GenerateTokensAsync(storedToken.User);
-
-            await _context.SaveChangesAsync();
+            var token = await GenerateTokensAsync(user);
 
             return new APPResult
             {
                 IsSuccess = true,
-                UserId = storedToken.User.Id,
-                Token = tokens.Token,
-                RefreshToken = tokens.RefreshToken
+                Token = token
             };
         }
 
-        private async Task<(string Token, string RefreshToken)> GenerateTokensAsync(User user)
+        private async Task<string> GenerateTokensAsync(User user)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.UserName),
                 new Claim("SecurityStamp", user.SecurityStamp),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
-            var roles = await _userManager.GetRolesAsync(user);
 
+
+            var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
-            {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -496,24 +485,10 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddHours(5),
                 signingCredentials: creds
             );
-
-            var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-            var refreshTokenHash = refreshToken.Hash();
-
-            _context.refreshTokens.Add(new RefreshToken
-            {
-                Token = refreshTokenHash,
-                UserId = user.Id,
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
-                IsRevoked = false
-            });
-
-            await _context.SaveChangesAsync();
-
-            return (new JwtSecurityTokenHandler().WriteToken(token), refreshToken);
+            return (new JwtSecurityTokenHandler().WriteToken(token));
         }
 
         public async Task<APPResult> ResendRegistrationOtpAsync(string email)

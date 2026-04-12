@@ -16,6 +16,8 @@ namespace IRS.DAL.Models
         public Point Location { get; set; }
         public DateTime DateTime { get; set; }
         public ReportStatus Status { get; set; }
+        public ReportPeriority Periority { get; set; }
+
         public string Description { get; set; }
         public byte[]? Image { get; set; }
         public TimeSpan? AiTime { get; set; }

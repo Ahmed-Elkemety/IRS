@@ -36,7 +36,7 @@ namespace IRS.DAL.Repository.ReportRepo
             report.Title = dto.Title;
             report.Description = dto.Description;
             report.CategoryId = dto.CategoryId;
-
+            report.Periority = dto.Periority;
             // تحديث الموقع
             var geometryFactory = NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
             report.Location = geometryFactory.CreatePoint(new Coordinate(dto.Longitude, dto.Latitude));

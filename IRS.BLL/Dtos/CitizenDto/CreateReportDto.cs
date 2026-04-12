@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IRS.DAL.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace IRS.BLL.Dtos.CitizenDto
@@ -13,7 +14,7 @@ namespace IRS.BLL.Dtos.CitizenDto
         public string Description { get; set; }
 
         public int CategoryId { get; set; }
-
+        public ReportPeriority Periority { get; set; }
         public IFormFile Image { get; set; }
 
         public double Latitude { get; set; }
