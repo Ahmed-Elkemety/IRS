@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace IRS.DAL.Enums
 {
-    public enum ReportStatus
+    public enum ReportCategory
     {
-       Pinding = 1,
-       Inprogress = 2,
-       Resolved = 3,
-       Canceled = 4
+        Fire = 1,
+        Smoke = 2,
+        incedent = 3
     }
 }

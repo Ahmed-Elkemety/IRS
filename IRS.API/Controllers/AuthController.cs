@@ -1,4 +1,5 @@
-﻿using IRS.BLL.Dtos.AccountDto.Forget_password;
+﻿using System.Security.Claims;
+using IRS.BLL.Dtos.AccountDto.Forget_password;
 using IRS.BLL.Dtos.AccountDto.User;
 using IRS.BLL.Managers.AccountManager.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -88,11 +89,13 @@ namespace IRS.API.Controllers
 
         // ✅ تحديث الـRefreshToken
 
+        [Authorize]
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RefreshToken()
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var result = await _authUser.RefreshTokenAsync(refreshToken);
+            var result = await _authUser.RefreshTokenAsync(userId);
             if (!result.IsSuccess)
                 return Unauthorized(result);
 

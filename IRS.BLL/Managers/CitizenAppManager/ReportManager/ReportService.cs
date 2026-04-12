@@ -79,7 +79,8 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                 CitizenId = citizen.Id,
                 Image = imageBytes,
                 DateTime = DateTime.UtcNow,
-                Status = IRS.DAL.Enums.ReportStatus.verified
+                Status = IRS.DAL.Enums.ReportStatus.Pinding,
+                Periority = dto.Periority
             };
 
             // 7. Save to Database with try/catch for logging
@@ -147,7 +148,9 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                     Image = dto.Image,
                     Latitude = dto.Latitude,
                     Longitude = dto.Longitude,
-                    Title = dto.Title
+                    Title = dto.Title,
+                    Periority = dto.Periority
+                    
                 };
                 var updated = await _reportRepo.UpdateReportAsync(reportId, userId, dto1);
                 if (!updated)

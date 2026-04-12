@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IRS.DAL.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace IRS.DAL.RepoDtos
@@ -11,6 +12,8 @@ namespace IRS.DAL.RepoDtos
     {
         public string Title { get; set; }
         public string Description { get; set; }
+
+        public ReportPeriority Periority { get; set; }
 
         public int CategoryId { get; set; }
 
