@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IRS.DAL.Enums;
 using Microsoft.AspNetCore.Http;
 
-namespace IRS.DAL.RepoDtos
+namespace IRS.DAL.RepoDtos.ReportDto
 {
     public class EditReportRepoDto
     {

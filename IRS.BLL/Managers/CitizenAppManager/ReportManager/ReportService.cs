@@ -87,6 +87,18 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
             try
             {
                 await _context.Reports.AddAsync(report);
+
+                var notification = new Notification
+                {
+                    Title = "Report Created",
+                    Message = "Your report has been created successfully.",
+                    NotificationType = NotificationType.ReportMessage,
+                    IsRead = false,
+                    CitizenId = citizen.Id,
+                    Report = report
+                };
+
+                await _context.Notifications.AddAsync(notification);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -141,7 +153,7 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                     imageBytes = ms.ToArray();
                 }
 
-                var dto1 = new EditReportRepoDto
+                var dto1 = new DAL.RepoDtos.ReportDto.EditReportRepoDto
                 {
                     CategoryId = dto.CategoryId,
                     Description = dto.Description,
@@ -159,6 +171,26 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                     result.Message = "Report not found or you don't have permission.";
                     return result;
                 }
+                var report = await _context.Reports.FirstOrDefaultAsync(r => r.Id == reportId);
+                if (report == null)
+                {
+                    result.IsSuccess = false;
+                    result.Message = "Report not found.";
+                    return result;
+                }
+
+                var notification = new Notification
+                {
+                    Title = "Report Updated",
+                    Message = "Your report has been updated successfully.",
+                    NotificationType = NotificationType.ReportMessage,
+                    IsRead = false,
+                    CitizenId = report.CitizenId,
+                    ReportId = report.Id
+                };
+
+                await _context.Notifications.AddAsync(notification);
+                await _context.SaveChangesAsync();
 
                 result.IsSuccess = true;
                 result.Message = "Report updated successfully.";

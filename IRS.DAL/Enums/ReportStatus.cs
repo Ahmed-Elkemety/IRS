@@ -11,6 +11,5 @@ namespace IRS.DAL.Enums
        Pinding = 1,
        Inprogress = 2,
        Resolved = 3,
-       Canceled = 4
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IRS.DAL.Enums;
 
-namespace IRS.DAL.RepoDtos
+namespace IRS.DAL.RepoDtos.ReportDto
 {
     public class ReportFilterRepoDto
     {

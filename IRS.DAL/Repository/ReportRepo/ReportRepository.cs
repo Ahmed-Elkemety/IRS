@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IRS.DAL.Database;
 using IRS.DAL.Enums;
 using IRS.DAL.Models;
-using IRS.DAL.RepoDtos;
+using IRS.DAL.RepoDtos.ReportDto;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using Coordinate = NetTopologySuite.Geometries.Coordinate;
@@ -98,6 +98,12 @@ namespace IRS.DAL.Repository.ReportRepo
                 .Include(r => r.Category)
                 .Include(r => r.Citizen)
                 .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task<bool> UpdateStatusAsync(Report report)
+        {
+            _context.Reports.Update(report);
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

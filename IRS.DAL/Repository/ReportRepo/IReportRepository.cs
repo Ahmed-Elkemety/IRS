@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IRS.DAL.Enums;
 using IRS.DAL.Models;
-using IRS.DAL.RepoDtos;
+using IRS.DAL.RepoDtos.ReportDto;
 
 namespace IRS.DAL.Repository.ReportRepo
 {
@@ -15,5 +15,6 @@ namespace IRS.DAL.Repository.ReportRepo
         Task<ReportStatus> GetStatusAsync(int reportId);
         Task<List<Report>> GetReportsAsync(ReportFilterRepoDto filter);
         Task<Report?> GetByIdAsync(int id);
+        Task<bool> UpdateStatusAsync(Report report);
     }
 }

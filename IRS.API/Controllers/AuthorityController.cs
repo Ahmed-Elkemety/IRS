@@ -1,5 +1,6 @@
 ﻿using IRS.BLL.Dtos.AuthorityDto.Report;
 using IRS.BLL.Managers.AccountManager.Auth;
+using IRS.BLL.Managers.AuthorityManager.Analytics;
 using IRS.BLL.Managers.AuthorityManager.Dashboard;
 using IRS.BLL.Managers.AuthorityManager.Report;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +16,13 @@ namespace IRS.API.Controllers
     {
         private readonly IDashboardService _service;
         private readonly IReportManager _report;
+        private readonly IAnalyticsManager _analytics;
 
-        public AuthorityController(IDashboardService service , IReportManager report)
+        public AuthorityController(IDashboardService service , IReportManager report , IAnalyticsManager analytics)
         {
             _service = service;
             _report = report;
+            _analytics = analytics;
         }
 
         // ============================
@@ -115,5 +118,22 @@ namespace IRS.API.Controllers
             });
         }
 
+        [HttpPut("UpdateStatus/{reportId}")]
+        public async Task<IActionResult> UpdateReportStatus(int reportId, [FromBody] UpdateReportStatusDto dto)
+        {
+            var result = await _report.UpdateReportStatusAsync(reportId, dto);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpGet("Analytics")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            var data = await _analytics.GetAnalyticsAsync();
+            return Ok(data);
+        }
     }
 }
