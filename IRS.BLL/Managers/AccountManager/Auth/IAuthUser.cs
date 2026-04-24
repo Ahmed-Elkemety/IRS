@@ -20,6 +20,8 @@ namespace IRS.BLL.Managers.AccountManager.Auth
         Task<APPResult> RefreshTokenAsync(string refreshToken);
         Task<APPResult> ResendRegistrationOtpAsync(string email);
 
+        Task<APPResult> ChangePasswordAsync(string userId, ChangePasswordDto dto);
+
         Task<APPResult> RequestPasswordResetAsync(string email);
         Task<APPResult> VerifyOtpAsync(VerifyOtpDto dto);
         Task<APPResult> ResetPasswordAsync(ResetPasswordDto dto);

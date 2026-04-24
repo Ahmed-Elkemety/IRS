@@ -531,6 +531,91 @@ namespace IRS.BLL.Managers.AccountManager.Auth
                 Message = "Registration OTP resent successfully"
             };
         }
+
+        public async Task<APPResult> ChangePasswordAsync(string userId, ChangePasswordDto dto)
+        {
+            if (dto.CurrentPassword == dto.NewPassword)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Message = "Current Password Can not be Match With New Password"
+                };
+            }
+
+            if (dto.NewPassword != dto.ConfirmPassword)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Message = "Passwords do not match"
+                };
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Message = "User not found"
+                };
+            }
+            var isCorrect = await _userManager.CheckPasswordAsync(user, dto.CurrentPassword);
+
+            if (!isCorrect)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Message = "Current password is incorrect"
+                };
+            }
+
+            var passwordValidator = new PasswordValidator<User>();
+
+
+            var validationResult = await passwordValidator.ValidateAsync(_userManager, user, dto.NewPassword);
+
+            if (!validationResult.Succeeded)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Errors = validationResult.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+
+            var result = await _userManager.ChangePasswordAsync(
+            user,
+            dto.CurrentPassword,
+            dto.NewPassword
+        );
+
+            if (!result.Succeeded)
+            {
+                return new APPResult
+                {
+                    IsSuccess = false,
+                    Message = "Change password failed",
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+            await _userManager.UpdateAsync(user);
+
+            var token = await GenerateTokensAsync(user);
+
+
+            return new APPResult
+            {
+                IsSuccess = true,
+                Message = "Password changed successfully",
+                Token = token
+            };
+        }
         public async Task<APPResult> RequestPasswordResetAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
