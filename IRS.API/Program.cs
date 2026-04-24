@@ -4,9 +4,13 @@ using System.Text;
 using System.Transactions;
 using IRS.BLL.Managers.AccountManager.Auth;
 using IRS.BLL.Managers.AuthorityManager.Report;
+using IRS.BLL.Managers.CitizenAppManager.CitizenManager;
+using IRS.BLL.Managers.CitizenAppManager.NotificationManager;
 using IRS.BLL.Managers.CitizenAppManager.ReportManager;
 using IRS.DAL.Database;
 using IRS.DAL.Models;
+using IRS.DAL.Repository.CitizenRepo;
+using IRS.DAL.Repository.NotificationRepo;
 using IRS.DAL.Repository.ReportRepo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
@@ -40,6 +44,10 @@ namespace IRS.API
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IReportRepository, ReportRepository>();
             builder.Services.AddScoped<IReportManager, ReportManager>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            builder.Services.AddScoped<INotificationManager, NotificationManager>();
+            builder.Services.AddScoped<ICitizenRepository, CitizenRepository>();
+            builder.Services.AddScoped<IProfileService, ProfileService>();
 
             var jwtSettings = builder.Configuration.GetSection("JWT");
 

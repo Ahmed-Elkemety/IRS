@@ -105,5 +105,26 @@ namespace IRS.DAL.Repository.ReportRepo
             _context.Reports.Update(report);
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<Citizen> GetCitizenWithReportsAsync(string userId)
+        {
+            return await _context.Citizens
+                .Include(c => c.Reports)
+                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
+        }
+
+        public async Task<List<Report>> GetReportsByCitizenIdAsync(int citizenId, ReportStatus? status)
+        {
+            var query = _context.Reports
+                .Include(r => r.Category)
+                .Where(r => r.CitizenId == citizenId);
+
+            if (status.HasValue)
+                query = query.Where(r => r.Status == status);
+
+            return await query
+                .OrderByDescending(r => r.DateTime)
+                .ToListAsync();
+        }
     }
 }

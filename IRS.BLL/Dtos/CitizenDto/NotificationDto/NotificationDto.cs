@@ -3,24 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IRS.DAL.Enums;
 
-namespace IRS.DAL.Models
+namespace IRS.BLL.Dtos.CitizenDto.NotificationDto
 {
-    public class Notification
+    public class NotificationDto
     {
         public int Id { get; set; }
-
         public string Title { get; set; }
         public string Message { get; set; }
-        public  NotificationType NotificationType { get; set; }
+        public string Type { get; set; }
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
-
-        public int CitizenId { get; set; }
-        public Citizen Citizen { get; set; }
-
-        public int ReportId { get; set; }
-        public Report Report { get; set; }
     }
 }

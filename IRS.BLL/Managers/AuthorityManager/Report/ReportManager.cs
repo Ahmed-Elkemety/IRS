@@ -116,6 +116,7 @@ namespace IRS.BLL.Managers.AuthorityManager.Report
                         : "Your report has been resolved.",
                     NotificationType = NotificationType.ReportMessage,
                     IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
                     CitizenId = report.CitizenId,
                     ReportId = report.Id
                 };

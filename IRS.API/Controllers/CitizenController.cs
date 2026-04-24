@@ -1,9 +1,12 @@
-﻿using IRS.BLL.Dtos.CitizenDto;
-using IRS.BLL.Managers.CitizenAppManager.ReportManager;
+﻿using IRS.BLL.Managers.CitizenAppManager.ReportManager;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using IRS.BLL.Dtos.CitizenDto.ReportDtos;
+using IRS.DAL.Enums;
+using IRS.BLL.Dtos.CitizenDto.ProfileDtos;
+using IRS.BLL.Managers.CitizenAppManager.CitizenManager;
 
 namespace IRS.API.Controllers
 {
@@ -13,10 +16,12 @@ namespace IRS.API.Controllers
     public class CitizenController : ControllerBase
     {
         private readonly IReportService _service;
+        private readonly IProfileService _profile;
 
-        public CitizenController(IReportService service)
+        public CitizenController(IReportService service ,IProfileService profile)
         {
             _service = service;
+            _profile = profile;
         }
 
         [HttpPost("Create-report")]
@@ -77,6 +82,48 @@ namespace IRS.API.Controllers
             {
                 return NotFound(new { Message = "Report not found" });
             }
+        }
+
+        [HttpGet("home")]
+        public async Task<IActionResult> GetHome()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var result = await _service.GetHomeAsync(userId);
+
+            return Ok(result);
+        }
+
+        [HttpGet("history")]
+        public async Task<IActionResult> GetReports([FromQuery] ReportStatus? status)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var result = await _service.GetCitizenReportsAsync(userId, status);
+
+            return Ok(result);
+        }
+
+        // 📌 Get Profile
+        [HttpGet("View-Profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var result = await _profile.GetProfileAsync(userId);
+
+            return Ok(result);
+        }
+
+        // 📌 Update Profile
+        [HttpPut("Update-Info")]
+        public async Task<IActionResult> UpdateProfile([FromForm] UpdateProfileDto dto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            await _profile.UpdateProfileAsync(userId, dto);
+
+            return Ok(new { message = "Profile updated successfully" });
         }
     }
 }

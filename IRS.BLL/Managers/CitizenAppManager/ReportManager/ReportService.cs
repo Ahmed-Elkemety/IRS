@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IRS.BLL.Dtos.CitizenDto;
+using IRS.BLL.Dtos.CitizenDto.ReportDtos;
 using IRS.BLL.Managers.AccountManager.Auth;
 using IRS.DAL.Database;
 using IRS.DAL.Enums;
@@ -11,6 +11,7 @@ using IRS.DAL.Models;
 using IRS.DAL.RepoDtos;
 using IRS.DAL.Repository.ReportRepo;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
@@ -23,12 +24,14 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
         private readonly IReportRepository _reportRepo;
         private readonly IRS_Context _context;
         private readonly IWebHostEnvironment _env;
+        private readonly UserManager<User> _userManager;
 
-        public ReportService(IReportRepository reportRepo, IRS_Context Context , IWebHostEnvironment env)
+        public ReportService(IReportRepository reportRepo, IRS_Context Context , IWebHostEnvironment env, UserManager<User> userManager)
         {
             _reportRepo = reportRepo;
             _context = Context;
             _env = env;
+            _userManager = userManager;
         }
 
         public async Task CreateReportAsync(CreateReportDto dto, string userId)
@@ -185,6 +188,7 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                     Message = "Your report has been updated successfully.",
                     NotificationType = NotificationType.ReportMessage,
                     IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
                     CitizenId = report.CitizenId,
                     ReportId = report.Id
                 };
@@ -217,6 +221,71 @@ namespace IRS.BLL.Managers.CitizenAppManager.ReportManager
                 throw new KeyNotFoundException();
 
             return status;
+        }
+
+        public async Task<HomeDto> GetHomeAsync(string userId)
+        {
+            var citizen = await _reportRepo.GetCitizenWithReportsAsync(userId);
+
+            if (citizen == null)
+                throw new Exception("Citizen not found");
+
+            var reports = citizen.Reports ?? new List<Report>();
+
+            var now = DateTime.UtcNow;
+
+            var dto = new HomeDto
+            {
+                FullName = citizen.FullName,
+                Image = citizen.Image,
+
+                PendingReports = reports.Count(r => r.Status == ReportStatus.Pinding),
+
+                TotalReports = reports.Count(),
+
+                PendingCount = reports.Count(r => r.Status == ReportStatus.Pinding),
+                InProgressCount = reports.Count(r => r.Status == ReportStatus.Inprogress),
+                ResolvedCount = reports.Count(r => r.Status == ReportStatus.Resolved),
+
+                ReportsThisMonth = reports.Count(r =>
+                    r.DateTime.Month == now.Month &&
+                    r.DateTime.Year == now.Year)
+            };
+
+            return dto;
+        }
+
+        public async Task<List<ReportHistoryDto>> GetCitizenReportsAsync(string userId, ReportStatus? status)
+        {
+            var user = await _userManager.Users
+                .Include(u => u.Citizen)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user?.Citizen == null)
+                throw new Exception("Citizen not found");
+
+            var reports = await _reportRepo.GetReportsByCitizenIdAsync(user.Citizen.Id, status);
+
+            return reports.Select(r => new ReportHistoryDto
+            {
+                Id = r.Id,
+                ReportCode = $"INC-{r.DateTime.Year}-{r.Id:D3}",
+                Title = r.Title,
+                CategoryName = r.Category.Name,
+                Date = r.DateTime,
+                Status = MapStatus(r.Status),
+            }).ToList();
+        }
+
+        private string MapStatus(ReportStatus status)
+        {
+            return status switch
+            {
+                ReportStatus.Pinding => "Pending",
+                ReportStatus.Inprogress => "In Progress",
+                ReportStatus.Resolved => "Solved",
+                _ => "Unknown"
+            };
         }
 
     }
